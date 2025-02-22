@@ -1,0 +1,27 @@
+import json
+import requests
+from bs4 import BeautifulSoup
+
+def handler(event, context):
+    # Function to get fitness suggestions based on the query
+    def get_fitness_suggestions(query):
+        search_url = f"https://www.google.com/search?q={query}"
+        headers = {"User-Agent": "Mozilla/5.0"}
+        response = requests.get(search_url, headers=headers)
+        soup = BeautifulSoup(response.text, "html.parser")
+        results = []
+        for g in soup.find_all('div', class_='BNeawe vvjwJb AP7Wnd')[:5]:
+            results.append(g.get_text())
+        return results if results else ["No suggestions found"]
+
+    # Get the query parameter from the request
+    query = event.get('queryStringParameters', {}).get('query', '')
+
+    # Get fitness suggestions based on the query
+    suggestions = get_fitness_suggestions(query)
+
+    # Return the result as a JSON response
+    return {
+        'statusCode': 200,
+        'body': json.dumps({'suggestions': suggestions}),
+    }
